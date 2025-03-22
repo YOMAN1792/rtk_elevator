@@ -1,9 +1,9 @@
 Config = {}
 
-Config.Distance = 3
-Config.Hidden = false
+Config.Distance = 1.5 --Distances in meter for how far you should be able to tp. Default is 1.5
+Config.Hidden = false --Default is false
 
 Config.TeleportLocations = {
-{"test 1", vector3(-207.217576, -727.424194, 33.492310), vector3(-201.916488, -720.540650, 33.492310)},
-{"test 22", vector3(-203.630768, -729.481324, 33.492310), vector3(-200.083512, -723.771424, 33.492310)}
+{"Name of your teleport", vector3(0.0, 0.0, 0.0), vector3(0.0, 0.0, 0.0)},
+{"Hello World", vector3(0.0, 0.0, 0.0), vector3(0.0, 0.0, 0.0)} -- You can add as many as you want
 }
