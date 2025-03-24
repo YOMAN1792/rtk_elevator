@@ -4,56 +4,64 @@ Citizen.CreateThread(function()
       local pointA = teleportData[2]
       local pointB = teleportData[3]
 
-      -- Function to teleport the player to a specified destination
-      local function TeleportPlayer(destination)
-          local player = PlayerPedId()
-          DoScreenFadeOut(500) -- Fade out the screen before teleportation
-          Citizen.Wait(500)
-          ESX.Game.Teleport(player, destination, function ()
-            print("Teleportation successful!")
-          end)
-          Citizen.Wait(500)
-          DoScreenFadeIn(500) -- Fade in the screen after teleportation
+      -- Teleportation request function
+      local function requestTeleport(destination)
+          -- Request the server to teleport the player
+          TriggerServerEvent('RTK_Teleport:requestTeleport', destination)
       end
 
-      -- Loop through both points (A → B and B → A)
+      -- Create two interaction points: A → B and B → A
       for _, point in ipairs({pointA, pointB}) do
           local targetDestination = (point == pointA) and pointB or pointA
-          local canInteract = false -- Prevents repeated interaction
+          local canInteract = false
 
-          -- Create an interaction point using ESX.Point
+          -- Define the interaction point with ESX.Point
           local esxPoint = ESX.Point:new({
               coords = point,
-              distance = Config.Distance or 1.5, -- Interaction distance
-              hidden = Config.Hidden or false -- Whether the point is hidden
+              distance = Config.Distance or 1.5,
+              hidden = Config.Hidden or false
           })
 
-          -- Register the interaction for teleportation
+          -- Register the interaction
           ESX.RegisterInteraction('Teleport_' .. teleportText .. '_' .. tostring(point), function()
               if canInteract then
                   canInteract = false -- Temporarily disable interaction
-                  ESX.HideUI() -- Hide the interaction UI
-                  TeleportPlayer(targetDestination) -- Execute teleportation
+                  ESX.HideUI() -- Hide TextUI to prevent repeated teleportation
+                  requestTeleport(targetDestination) -- Request teleportation from the server
               end
           end, function()
-              return canInteract -- Check if interaction is allowed
+              return canInteract
           end)
 
-          -- Triggered when the player enters the interaction zone
+          -- Detect when the player enters the interaction zone
           function esxPoint:enter()
               if not canInteract then
-                  Citizen.SetTimeout(1000, function() -- Delay to avoid immediate activation
+                  Citizen.SetTimeout(1000, function() -- Wait for 1 second to avoid immediate activation
                       canInteract = true
                       ESX.TextUI(("~g~Press %s to %s"):format(ESX.GetInteractKey(), teleportText))
                   end)
               end
           end
 
-          -- Triggered when the player leaves the interaction zone
+          -- Detect when the player leaves the zone
           function esxPoint:leave()
-              canInteract = false -- Disable interaction when leaving the zone
-              ESX.HideUI() -- Hide the interaction UI
+              canInteract = false
+              ESX.HideUI() -- Hide the UI when leaving the zone
           end
       end
   end
+end)
+
+-- Client-side: Perform the teleportation
+RegisterNetEvent('RTK_Teleport:teleportPlayer')
+AddEventHandler('RTK_Teleport:teleportPlayer', function(destination)
+    local playerPed = PlayerPedId()
+    DoScreenFadeOut(500)
+    Citizen.Wait(500)
+    -- Use ESX.Game.Teleport to teleport the player
+    ESX.Game.Teleport(playerPed, destination, function() 
+        print('Player teleported to: ' .. destination.x .. ', ' .. destination.y .. ', ' .. destination.z)
+    end)
+    Citizen.Wait(500)
+    DoScreenFadeIn(500) 
 end)
